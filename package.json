@@ -4,7 +4,7 @@
   "description": "Reverse proxy server for bypassing CORS and X-Frame-Options",
   "main": "server.js",
   "engines": {
-    "node": "18.x"
+    "node": "24.x"
   },
   "scripts": {
     "start": "node server.js",
