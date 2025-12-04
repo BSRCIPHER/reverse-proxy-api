@@ -12,7 +12,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(verifyUser);
 app.get('/', async (req, res) => {
   try{
  
@@ -24,6 +23,7 @@ app.get('/', async (req, res) => {
   }
   res.send('Hello World!');
 });
+app.use(verifyUser);
 
 
 app.use("/users",userRoutes);
