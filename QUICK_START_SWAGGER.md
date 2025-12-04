@@ -29,9 +29,10 @@ Open in browser: **http://localhost:3001/api-docs**
 
 ## 📍 Available Endpoints
 
-- **Swagger UI:** http://localhost:3001/api-docs
-- **Swagger JSON:** http://localhost:3001/api-docs.json
-- **Production:** https://reverse-proxy-007-9si2.vercel.app/api-docs
+- **Local Swagger UI:** http://localhost:3001/api-docs
+- **Local Swagger JSON:** http://localhost:3001/api-docs.json
+- **Production Swagger UI:** https://reverse-proxy-007-9si2.vercel.app/api-docs
+- **Production Swagger JSON:** https://reverse-proxy-007-9si2.vercel.app/api-docs.json
 
 ## ✅ What's Documented
 
