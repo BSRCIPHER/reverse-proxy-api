@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
-const { use } = require('react');
+;
 
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
