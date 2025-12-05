@@ -1,10 +1,10 @@
 {
-  "name": "reverse-proxy-server",
+  "name": "swagger-proxy-server",
   "version": "1.0.0",
-  "description": "Reverse proxy server for bypassing CORS and X-Frame-Options",
+  "description": "Swagger-documented proxy server for bypassing CORS and X-Frame-Options",
   "main": "server.js",
   "engines": {
-    "node": "24.x"
+    "node": ">=18.x"
   },
   "scripts": {
     "start": "node server.js",
@@ -12,11 +12,8 @@
   },
   "dependencies": {
     "axios": "^1.6.0",
-    "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^9.0.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
   },

@@ -5,17 +5,21 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Reverse Proxy Server API',
+      title: 'Swagger Proxy Server API',
       version: '1.0.0',
-      description: 'API documentation for Reverse Proxy Server with User Management',
+      description: 'A proxy server that bypasses CORS and X-Frame-Options restrictions, allowing you to embed any URL in an iframe. Includes URL frameability checking and base64url encoding support.',
       contact: {
         name: 'API Support',
         email: 'support@example.com'
+      },
+      license: {
+        name: 'MIT',
+        url: 'https://opensource.org/licenses/MIT'
       }
     },
     servers: [
       {
-        url: 'http://localhost:3001',
+        url: 'http://localhost:3000',
         description: 'Development server'
       },
       {
@@ -23,50 +27,96 @@ const options = {
         description: 'Production server'
       }
     ],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT'
-        }
+    tags: [
+      {
+        name: 'Health',
+        description: 'Server health and information endpoints'
       },
+      {
+        name: 'Proxy',
+        description: 'Proxy and URL checking endpoints'
+      }
+    ],
+    components: {
       schemas: {
-        User: {
+        HealthResponse: {
           type: 'object',
           properties: {
-            _id: {
+            status: {
               type: 'string',
-              description: 'User ID'
+              example: 'ok'
             },
-            name: {
+            message: {
               type: 'string',
-              description: 'User name'
+              example: 'Swagger Proxy Server'
             },
-            email: {
+            endpoints: {
+              type: 'object',
+              properties: {
+                proxy: {
+                  type: 'string'
+                },
+                proxyLegacy: {
+                  type: 'string'
+                },
+                check: {
+                  type: 'string'
+                },
+                broken: {
+                  type: 'string'
+                }
+              }
+            }
+          }
+        },
+        CheckRequest: {
+          type: 'object',
+          required: ['url'],
+          properties: {
+            url: {
               type: 'string',
-              description: 'User email'
+              format: 'uri',
+              example: 'https://example.com',
+              description: 'The URL to check for frameability'
+            }
+          }
+        },
+        CheckResponse: {
+          type: 'object',
+          properties: {
+            frameable: {
+              type: 'boolean',
+              description: 'Whether the URL can be embedded in an iframe'
             },
-            createdAt: {
+            xFrameOptions: {
               type: 'string',
-              format: 'date-time',
-              description: 'User creation date'
+              nullable: true,
+              description: 'The X-Frame-Options header value, if present'
+            },
+            csp: {
+              type: 'string',
+              nullable: true,
+              description: 'The Content-Security-Policy header value, if present'
             }
           }
         },
         Error: {
           type: 'object',
           properties: {
-            message: {
+            error: {
               type: 'string',
               description: 'Error message'
+            },
+            frameable: {
+              type: 'boolean',
+              description: 'Always false for error responses'
             }
           }
         }
       }
     }
   },
-  apis: ['./routes/*.js', './server.js', './api/index.js']
+  apis: ['./server.js']
 };
 
 const swaggerSpec = swaggerJsdoc(options);
