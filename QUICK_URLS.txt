@@ -1,0 +1,73 @@
+═══════════════════════════════════════════════════════════════
+  🚀 SWAGGER PROXY SERVER - QUICK URL REFERENCE
+═══════════════════════════════════════════════════════════════
+
+📚 SWAGGER DOCUMENTATION
+────────────────────────────────────────────────────────────────
+Interactive UI (for testing):
+https://reverse-proxy-007-9si2.vercel.app/api-docs
+
+JSON Spec (for Confluence/tools):
+https://reverse-proxy-007-9si2.vercel.app/api-docs.json
+
+Clean iFrame (for embedding):
+https://reverse-proxy-007-9si2.vercel.app/swagger-embed.html
+
+Styled Page:
+https://reverse-proxy-007-9si2.vercel.app/
+
+═══════════════════════════════════════════════════════════════
+
+🎯 API ENDPOINTS
+────────────────────────────────────────────────────────────────
+Health Check:
+GET https://reverse-proxy-007-9si2.vercel.app/
+
+Check URL Frameability:
+POST https://reverse-proxy-007-9si2.vercel.app/check
+Body: {"url": "https://example.com"}
+
+Proxy URL:
+GET https://reverse-proxy-007-9si2.vercel.app/proxy/https://example.com
+
+═══════════════════════════════════════════════════════════════
+
+💻 FRONTEND INTEGRATION
+────────────────────────────────────────────────────────────────
+React/HTML iFrame:
+<iframe 
+  src="https://reverse-proxy-007-9si2.vercel.app/swagger-embed.html"
+  width="100%"
+  height="800px"
+/>
+
+JavaScript Fetch:
+fetch('https://reverse-proxy-007-9si2.vercel.app/check', {
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: JSON.stringify({url: 'https://example.com'})
+})
+
+═══════════════════════════════════════════════════════════════
+
+📄 FOR CONFLUENCE
+────────────────────────────────────────────────────────────────
+Swagger Macro URL:
+https://reverse-proxy-007-9si2.vercel.app/api-docs.json
+
+iFrame Macro URL:
+https://reverse-proxy-007-9si2.vercel.app/swagger-embed.html
+
+═══════════════════════════════════════════════════════════════
+
+✅ QUICK TEST
+────────────────────────────────────────────────────────────────
+curl https://reverse-proxy-007-9si2.vercel.app/
+
+curl -X POST https://reverse-proxy-007-9si2.vercel.app/check \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com"}'
+
+═══════════════════════════════════════════════════════════════
+
+📖 MORE INFO: See FRONTEND_INTEGRATION.md

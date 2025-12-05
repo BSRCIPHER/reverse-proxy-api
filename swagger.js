@@ -24,7 +24,7 @@ const options = {
       },
       {
         url: 'https://reverse-proxy-007-9si2.vercel.app',
-        description: 'Production server'
+        description: 'Production server (Vercel)'
       }
     ],
     tags: [
