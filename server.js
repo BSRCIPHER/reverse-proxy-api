@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
@@ -12,11 +13,19 @@ app.use(express.json());
 // Serve static files from public directory
 app.use(express.static('public'));
 
+const authMiddleware = (req, res, next) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token || token !== process.env.API_DOCS_TOKEN) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
+};
+
 // Swagger UI
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/api-docs', authMiddleware, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Swagger JSON endpoint for export
-app.get('/api-docs.json', (req, res) => {
+app.get('/api-docs.json', authMiddleware, (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.send(swaggerSpec);
 });
