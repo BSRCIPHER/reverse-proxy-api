@@ -25,7 +25,7 @@ const authMiddleware = (req, res, next) => {
 app.use('/api-docs', authMiddleware, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Swagger JSON endpoint for export
-app.get('/api-docs.json', authMiddleware, (req, res) => {
+app.get('/api-docs.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.send(swaggerSpec);
 });
