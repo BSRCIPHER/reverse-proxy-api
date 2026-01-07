@@ -297,13 +297,8 @@ app.get('/proxy/:encodedUrl', async (req, res) => {
     delete headers['content-security-policy'];
     delete headers['content-security-policy-report-only'];
 
-    // Set CORS headers
-    res.set({
-      ...headers,
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': '*'
-    });
+    // Set response headers without CORS
+    res.set(headers);
     console.log(`Proxied URL: ${targetUrl}`);
 
     res.status(response.status).send(response.data);
@@ -359,13 +354,8 @@ app.get('/proxy/*', async (req, res) => {
     delete headers['content-security-policy'];
     delete headers['content-security-policy-report-only'];
 
-    // Set CORS headers
-    res.set({
-      ...headers,
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': '*'
-    });
+    // Set response headers without CORS
+    res.set(headers);
 
     res.status(response.status).send(response.data);
   } catch (error) {
