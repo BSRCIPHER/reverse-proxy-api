@@ -95,22 +95,27 @@ app.get('/', (req, res) => {
 });
 
 /**
-/**
  * @swagger
  * /check:
  *   post:
  *     summary: Check if URL is frameable and custom X- headers visibility
  *     description: Checks if a URL can be embedded in an iframe by examining X-Frame-Options and CSP headers. Also verifies presence of user-defined custom X- headers in response.
  *     tags: [Proxy]
+ *     x-show-vendor: true
+ *     parameters:
+ *       - in: header
+ *         name: ShowVendorExtensions
+ *         schema:
+ *           type: boolean
+ *           default: true
+ *         description: Toggle vendor extensions visibility
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - url
- *               - customHeaders
+ *             required: [url]
  *             properties:
  *               url:
  *                 type: string
@@ -122,6 +127,7 @@ app.get('/', (req, res) => {
  *                   type: string
  *                 example: ["X-MyCustomHeader1", "X-MyCustomHeader2"]
  *                 description: Array of custom X- header names to check for visibility (case-insensitive)
+ *                 x-show-vendor: true
  *     responses:
  *       200:
  *         description: URL check result with frameable status and custom headers visibility
@@ -146,12 +152,14 @@ app.get('/', (req, res) => {
  *                   additionalProperties:
  *                     type: boolean
  *                   example: {"X-MyCustomHeader1": true, "X-MyCustomHeader2": false}
- *                   description: Object showing presence of each requested custom header (true if visible/present)
+ *                   description: Object showing presence of each requested custom header
+ *                   x-show-vendor: true
  *       400:
  *         description: Bad request - URL or customHeaders is required
  *       500:
  *         description: Server error
  */
+
 app.post('/check', async (req, res) => {
   const { url, customHeaders = [] } = req.body;
   
