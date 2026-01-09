@@ -93,111 +93,76 @@ app.get('/', (req, res) => {
     }
   });
 });
-
 /**
  * @swagger
  * /check:
- *   post:
- *     summary: Check if URL is frameable and custom X- headers visibility
- *     description: Checks if a URL can be embedded in an iframe by examining X-Frame-Options and CSP headers. Also verifies presence of user-defined custom X- headers in response.
- *     tags: [Proxy]
- *     x-show-vendor: true
- *     x-openapi-meta: true
- *     parameters:
- *       - in: header
- *         name: ShowVendorExtensions
- *         schema:
- *           type: boolean
- *           default: true
- *         description: Toggle vendor extensions visibility
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [url]
- *             properties:
- *               url:
- *                 type: string
- *                 example: https://example.com
- *                 description: The URL to check
- *               customHeaders:
- *                 type: array
- *                 items:
- *                   type: string
- *                 example: ["X-MyCustomHeader1", "X-MyCustomHeader2"]
- *                 description: Array of custom X- header names to check for visibility (case-insensitive)
- *                 x-vendor-extension: true
- *                 x-openapi-meta: true
- *     responses:
- *       '200':
- *         description: URL check result with frameable status and custom headers visibility
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 frameable:
- *                   type: boolean
- *                   example: true
- *                 xFrameOptions:
- *                   type: string
- *                   nullable: true
- *                   example: null
- *                 csp:
- *                   type: string
- *                   nullable: true
- *                   example: null
- *                 customHeaders:
- *                   type: object
- *                   additionalProperties:
- *                     type: boolean
- *                   example: {"X-MyCustomHeader1": true, "X-MyCustomHeader2": false}
- *                   description: Object showing presence of each requested custom header
- *                   x-vendor-extension: true
- *                   x-openapi-meta: true
- *       '400':
- *         description: Bad request - URL or customHeaders is required
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *       '500':
- *         description: Server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                 frameable:
- *                   type: boolean
- *                   example: false
- *                 customHeaders:
- *                   type: object
- *                   example: {}
+ * post:
+ * summary: Check if URL is frameable and custom X- headers visibility
+ * description: Checks if a URL can be embedded in an iframe.
+ * tags: [Proxy]
+ * requestBody:
+ * required: true
+ * content:
+ * application/json:
+ * schema:
+ * type: object
+ * required: [url]
+ * properties:
+ * url:
+ * type: string
+ * example: https://example.com
+ * description: The URL to check
+ * # --- Common Extensions Fields ---
+ * pattern: '^https?://.+' 
+ * minLength: 12
+ * maxLength: 2048
+ * customHeaders:
+ * type: array
+ * description: Array of custom X- header names
+ * items:
+ * type: string
+ * example: "X-MyCustomHeader"
+ * # --- Common Extensions for items ---
+ * minLength: 2
+ * maxLength: 50
+ * pattern: '^[xX]-.+'
+ * responses:
+ * '200':
+ * description: URL check result
+ * content:
+ * application/json:
+ * schema:
+ * type: object
+ * properties:
+ * frameable:
+ * type: boolean
+ * xFrameOptions:
+ * type: string
+ * nullable: true
+ * csp:
+ * type: string
+ * nullable: true
+ * customHeaders:
+ * type: object
  */
-
 app.post('/check', async (req, res) => {
   const { url, customHeaders = [] } = req.body;
-  
-  if (!url) {
-    return res.status(400).json({ error: 'URL is required' });
+
+  // 1. Basic Validation Logic (Jo Swagger constraints ke hisaab se hai)
+  if (!url || url.length < 12) {
+    return res.status(400).json({ error: 'URL is too short or missing' });
   }
 
-  if (!Array.isArray(customHeaders)) {
-    return res.status(400).json({ error: 'customHeaders must be an array of header names' });
+  const urlPattern = /^https?:\/\/.+/;
+  if (!urlPattern.test(url)) {
+    return res.status(400).json({ error: 'Invalid URL format' });
   }
 
   try {
     const response = await axios.head(url, {
       maxRedirects: 5,
-      validateStatus: () => true
+      validateStatus: () => true,
+      timeout: 5000
     });
 
     const headers = response.headers;
@@ -205,13 +170,19 @@ app.post('/check', async (req, res) => {
     const csp = headers['content-security-policy'];
     const frameable = !xFrameOptions && !csp?.includes('frame-ancestors');
 
-    // Check visibility of user-defined X- headers (case-insensitive)
     const customHeadersCheck = {};
-    customHeaders.forEach(headerName => {
-      const normalizedName = headerName.toLowerCase().trim();
-      const isPresent = Object.keys(headers).some(h => h.toLowerCase() === normalizedName);
-      customHeadersCheck[headerName] = isPresent;
-    });
+    if (Array.isArray(customHeaders)) {
+      customHeaders.forEach(headerName => {
+        // Pattern check logic: starts with x-
+        if (/^[xX]-.+/.test(headerName)) {
+            const normalizedName = headerName.toLowerCase().trim();
+            const isPresent = Object.keys(headers).some(h => h.toLowerCase() === normalizedName);
+            customHeadersCheck[headerName] = isPresent;
+        } else {
+            customHeadersCheck[headerName] = "Invalid format (Must start with X-)";
+        }
+      });
+    }
 
     res.json({
       frameable,
@@ -222,12 +193,10 @@ app.post('/check', async (req, res) => {
   } catch (error) {
     res.status(500).json({ 
       error: error.message,
-      frameable: false,
-      customHeaders: {}
+      frameable: false 
     });
   }
 });
-
 
 /**
  * @swagger
