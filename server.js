@@ -21,8 +21,19 @@ const authMiddleware = (req, res, next) => {
   next();
 };
 
-// Swagger UI
-app.use('/api-docs', authMiddleware, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// Swagger UI (enable display of vendor extensions / x- fields)
+app.use(
+  '/api-docs',
+  authMiddleware,
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    explorer: true,
+    swaggerOptions: {
+      showExtensions: true,
+      showCommonExtensions: true
+    }
+  })
+);
 
 // Swagger JSON endpoint for export
 app.get('/api-docs.json', (req, res) => {
@@ -84,11 +95,12 @@ app.get('/', (req, res) => {
 });
 
 /**
+/**
  * @swagger
  * /check:
  *   post:
- *     summary: Check if URL is frameable
- *     description: Checks if a URL can be embedded in an iframe by examining X-Frame-Options and CSP headers
+ *     summary: Check if URL is frameable and custom X- headers visibility
+ *     description: Checks if a URL can be embedded in an iframe by examining X-Frame-Options and CSP headers. Also verifies presence of user-defined custom X- headers in response.
  *     tags: [Proxy]
  *     requestBody:
  *       required: true
@@ -98,14 +110,21 @@ app.get('/', (req, res) => {
  *             type: object
  *             required:
  *               - url
+ *               - customHeaders
  *             properties:
  *               url:
  *                 type: string
  *                 example: https://example.com
  *                 description: The URL to check
+ *               customHeaders:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["X-MyCustomHeader1", "X-MyCustomHeader2"]
+ *                 description: Array of custom X- header names to check for visibility (case-insensitive)
  *     responses:
  *       200:
- *         description: URL check result
+ *         description: URL check result with frameable status and custom headers visibility
  *         content:
  *           application/json:
  *             schema:
@@ -122,16 +141,26 @@ app.get('/', (req, res) => {
  *                   type: string
  *                   nullable: true
  *                   example: null
+ *                 customHeaders:
+ *                   type: object
+ *                   additionalProperties:
+ *                     type: boolean
+ *                   example: {"X-MyCustomHeader1": true, "X-MyCustomHeader2": false}
+ *                   description: Object showing presence of each requested custom header (true if visible/present)
  *       400:
- *         description: Bad request - URL is required
+ *         description: Bad request - URL or customHeaders is required
  *       500:
  *         description: Server error
  */
 app.post('/check', async (req, res) => {
-  const { url } = req.body;
+  const { url, customHeaders = [] } = req.body;
   
   if (!url) {
     return res.status(400).json({ error: 'URL is required' });
+  }
+
+  if (!Array.isArray(customHeaders)) {
+    return res.status(400).json({ error: 'customHeaders must be an array of header names' });
   }
 
   try {
@@ -140,19 +169,30 @@ app.post('/check', async (req, res) => {
       validateStatus: () => true
     });
 
-    const xFrameOptions = response.headers['x-frame-options'];
-    const csp = response.headers['content-security-policy'];
+    const headers = response.headers;
+    const xFrameOptions = headers['x-frame-options'];
+    const csp = headers['content-security-policy'];
     const frameable = !xFrameOptions && !csp?.includes('frame-ancestors');
+
+    // Check visibility of user-defined X- headers (case-insensitive)
+    const customHeadersCheck = {};
+    customHeaders.forEach(headerName => {
+      const normalizedName = headerName.toLowerCase().trim();
+      const isPresent = Object.keys(headers).some(h => h.toLowerCase() === normalizedName);
+      customHeadersCheck[headerName] = isPresent;
+    });
 
     res.json({
       frameable,
       xFrameOptions: xFrameOptions || null,
-      csp: csp || null
+      csp: csp || null,
+      customHeaders: customHeadersCheck
     });
   } catch (error) {
     res.status(500).json({ 
       error: error.message,
-      frameable: false
+      frameable: false,
+      customHeaders: {}
     });
   }
 });
