@@ -27,6 +27,9 @@ app.use('/api-docs', authMiddleware, swaggerUi.serve, swaggerUi.setup(swaggerSpe
 // Swagger JSON endpoint for export
 app.get('/api-docs.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
   res.send(swaggerSpec);
 });
 
