@@ -102,6 +102,7 @@ app.get('/', (req, res) => {
  *     description: Checks if a URL can be embedded in an iframe by examining X-Frame-Options and CSP headers. Also verifies presence of user-defined custom X- headers in response.
  *     tags: [Proxy]
  *     x-show-vendor: true
+ *     x-openapi-meta: true
  *     parameters:
  *       - in: header
  *         name: ShowVendorExtensions
@@ -127,9 +128,10 @@ app.get('/', (req, res) => {
  *                   type: string
  *                 example: ["X-MyCustomHeader1", "X-MyCustomHeader2"]
  *                 description: Array of custom X- header names to check for visibility (case-insensitive)
- *                 x-show-vendor: true
+ *                 x-vendor-extension: true
+ *                 x-openapi-meta: true
  *     responses:
- *       200:
+ *       '200':
  *         description: URL check result with frameable status and custom headers visibility
  *         content:
  *           application/json:
@@ -153,11 +155,32 @@ app.get('/', (req, res) => {
  *                     type: boolean
  *                   example: {"X-MyCustomHeader1": true, "X-MyCustomHeader2": false}
  *                   description: Object showing presence of each requested custom header
- *                   x-show-vendor: true
- *       400:
+ *                   x-vendor-extension: true
+ *                   x-openapi-meta: true
+ *       '400':
  *         description: Bad request - URL or customHeaders is required
- *       500:
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *       '500':
  *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                 frameable:
+ *                   type: boolean
+ *                   example: false
+ *                 customHeaders:
+ *                   type: object
+ *                   example: {}
  */
 
 app.post('/check', async (req, res) => {
@@ -204,6 +227,7 @@ app.post('/check', async (req, res) => {
     });
   }
 });
+
 
 /**
  * @swagger
