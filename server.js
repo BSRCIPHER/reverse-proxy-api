@@ -96,107 +96,128 @@ app.get('/', (req, res) => {
 /**
  * @swagger
  * /check:
- * post:
- * summary: Check if URL is frameable and custom X- headers visibility
- * description: Checks if a URL can be embedded in an iframe.
- * tags: [Proxy]
- * requestBody:
- * required: true
- * content:
- * application/json:
- * schema:
- * type: object
- * required: [url]
- * properties:
- * url:
- * type: string
- * example: https://example.com
- * description: The URL to check
- * # --- Common Extensions Fields ---
- * pattern: '^https?://.+' 
- * minLength: 12
- * maxLength: 2048
- * customHeaders:
- * type: array
- * description: Array of custom X- header names
- * items:
- * type: string
- * example: "X-MyCustomHeader"
- * # --- Common Extensions for items ---
- * minLength: 2
- * maxLength: 50
- * pattern: '^[xX]-.+'
- * responses:
- * '200':
- * description: URL check result
- * content:
- * application/json:
- * schema:
- * type: object
- * properties:
- * frameable:
- * type: boolean
- * xFrameOptions:
- * type: string
- * nullable: true
- * csp:
- * type: string
- * nullable: true
- * customHeaders:
- * type: object
+ *   post:
+ *     summary: Check if URL is frameable and custom X- headers visibility
+ *     description: Checks if a URL can be embedded in an iframe by examining security headers.
+ *     tags: [Proxy]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - url
+ *             properties:
+ *               url:
+ *                 type: string
+ *                 description: The URL to check
+ *                 example: https://example.com
+ *                 pattern: '^https?://.+'
+ *                 minLength: 12
+ *                 maxLength: 2048
+ *
+ *               customHeaders:
+ *                 type: array
+ *                 description: Array of custom X- header names
+ *                 example: ["X-MyCustomHeader"]
+ *                 items:
+ *                   type: string
+ *                   minLength: 2
+ *                   maxLength: 50
+ *                   pattern: '^[xX]-.+'
+ *
+ *     responses:
+ *       '200':
+ *         description: URL check result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 frameable:
+ *                   type: boolean
+ *                 xFrameOptions:
+ *                   type: string
+ *                   nullable: true
+ *                 csp:
+ *                   type: string
+ *                   nullable: true
+ *                 customHeaders:
+ *                   type: object
+ *                   additionalProperties:
+ *                     type: boolean
+ *
+ *       '400':
+ *         description: Invalid request
+ *
+ *       '500':
+ *         description: Server error
  */
+
 app.post('/check', async (req, res) => {
   const { url, customHeaders = [] } = req.body;
 
-  // 1. Basic Validation Logic (Jo Swagger constraints ke hisaab se hai)
-  if (!url || url.length < 12) {
-    return res.status(400).json({ error: 'URL is too short or missing' });
+  // ---------- VALIDATION ----------
+  if (!url) {
+    return res.status(400).json({ error: 'URL is required' });
   }
 
-  const urlPattern = /^https?:\/\/.+/;
-  if (!urlPattern.test(url)) {
+  if (typeof url !== 'string' || url.length < 12 || !/^https?:\/\/.+/.test(url)) {
     return res.status(400).json({ error: 'Invalid URL format' });
   }
 
+  if (!Array.isArray(customHeaders)) {
+    return res.status(400).json({ error: 'customHeaders must be an array' });
+  }
+
+  // ---------- MAIN LOGIC ----------
   try {
     const response = await axios.head(url, {
       maxRedirects: 5,
-      validateStatus: () => true,
-      timeout: 5000
+      timeout: 5000,
+      validateStatus: () => true
     });
 
-    const headers = response.headers;
-    const xFrameOptions = headers['x-frame-options'];
-    const csp = headers['content-security-policy'];
-    const frameable = !xFrameOptions && !csp?.includes('frame-ancestors');
+    const headers = response.headers || {};
 
-    const customHeadersCheck = {};
-    if (Array.isArray(customHeaders)) {
-      customHeaders.forEach(headerName => {
-        // Pattern check logic: starts with x-
-        if (/^[xX]-.+/.test(headerName)) {
-            const normalizedName = headerName.toLowerCase().trim();
-            const isPresent = Object.keys(headers).some(h => h.toLowerCase() === normalizedName);
-            customHeadersCheck[headerName] = isPresent;
-        } else {
-            customHeadersCheck[headerName] = "Invalid format (Must start with X-)";
-        }
-      });
-    }
+    const xFrameOptions = headers['x-frame-options'] || null;
+    const csp = headers['content-security-policy'] || null;
 
+    const frameable =
+      !xFrameOptions &&
+      !(csp && csp.includes('frame-ancestors'));
+
+    // ---------- CUSTOM HEADER CHECK ----------
+    const customHeadersResult = {};
+
+    customHeaders.forEach(headerName => {
+      if (/^[xX]-.+/.test(headerName)) {
+        const normalized = headerName.toLowerCase();
+        customHeadersResult[headerName] =
+          Object.keys(headers).some(h => h.toLowerCase() === normalized);
+      } else {
+        customHeadersResult[headerName] = false;
+      }
+    });
+
+    // ---------- RESPONSE ----------
     res.json({
       frameable,
-      xFrameOptions: xFrameOptions || null,
-      csp: csp || null,
-      customHeaders: customHeadersCheck
+      xFrameOptions,
+      csp,
+      customHeaders: customHeadersResult
     });
+
   } catch (error) {
-    res.status(500).json({ 
+    res.status(500).json({
       error: error.message,
-      frameable: false 
+      frameable: false,
+      customHeaders: {}
     });
   }
 });
+
 
 /**
  * @swagger
