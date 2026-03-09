@@ -24,7 +24,6 @@ app.use(express.static('public'));
 // Swagger UI (enable display of vendor extensions / x- fields)
 app.use(
   '/api-docs',
-  authMiddleware,
   swaggerUi.serve,
   swaggerUi.setup(swaggerSpec, {
     explorer: true,
