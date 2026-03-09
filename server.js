@@ -13,13 +13,13 @@ app.use(express.json());
 // Serve static files from public directory
 app.use(express.static('public'));
 
-const authMiddleware = (req, res, next) => {
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token || token !== process.env.API_DOCS_TOKEN) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  next();
-};
+// const authMiddleware = (req, res, next) => {
+//   const token = req.headers.authorization?.replace('Bearer ', '');
+//   if (!token || token !== process.env.API_DOCS_TOKEN) {
+//     return res.status(401).json({ error: 'Unauthorized' });
+//   }
+//   next();
+// };
 
 // Swagger UI (enable display of vendor extensions / x- fields)
 app.use(
