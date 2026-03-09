@@ -7,7 +7,7 @@ const { swaggerUi, swaggerSpec } = require('./swagger');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// app.use(cors());
+app.use(cors());
 app.use(express.json());
 
 // Serve static files from public directory
@@ -37,9 +37,9 @@ app.use(
 // Swagger JSON endpoint for export
 app.get('/api-docs.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.send(swaggerSpec);
 });
 
