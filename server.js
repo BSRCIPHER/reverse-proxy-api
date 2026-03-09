@@ -82,16 +82,7 @@ app.get('/api-docs.json', (req, res) => {
  *                       example: /broken (POST with {url} - checks if frameable)
  */
 app.get('/', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    message: 'Swagger Proxy Server',
-    endpoints: {
-      proxy: '/proxy/:encodedUrl (supports base64url encoding)',
-      proxyLegacy: '/proxy/* (wildcard path)',
-      check: '/check (POST with {url})',
-      broken: '/broken (POST with {url} - checks if frameable)'
-    }
-  });
+  res.json();
 });
 /**
  * @swagger
